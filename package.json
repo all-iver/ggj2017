@@ -28,5 +28,7 @@
     "iogrid",
     "iogame"
   ],
-  "readmeFilename": "README.md"
+  "readmeFilename": "README.md",
+  "devDependencies": {
+  }
 }
