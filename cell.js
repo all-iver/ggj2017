@@ -231,9 +231,17 @@ CellController.prototype.keepPlayerOnGrid = function (player) {
 
 CellController.prototype.applyPlayerOps = function (playerIds, players, coins) {
   var self = this;
+  var now = Date.now();
 
   playerIds.forEach(function (playerId) {
     var player = players[playerId];
+
+    if (!player.lastAttack)
+      player.lastAttack = 0;
+    if (!player.attackCount)
+      player.attackCount = 0;
+    if (now - player.lastAttack > config.ATTACK_TIMEOUT)
+      player.attacking = false;
 
     var playerOp = player.op;
     var moveSpeed;
@@ -267,6 +275,11 @@ CellController.prototype.applyPlayerOps = function (playerIds, players, coins) {
         movementVector.x = -moveSpeed;
         player.direction = 'left';
         movedHorizontally = true;
+      }
+      if (!player.attacking && playerOp.a) {
+        player.attacking = true;
+        player.attackCount += 1;
+        player.lastAttack = now;
       }
 
       if (movedHorizontally && movedVertically) {

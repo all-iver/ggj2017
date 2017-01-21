@@ -54,12 +54,13 @@
         var COIN_INACTIVITY_TIMEOUT = 2200;
         var ENVIRONMENT;
         var SERVER_WORKER_ID;
+        var ATTACK_ANIM_TIME = 250;
 
         var youTextures = {
-          up: 'img/you-back.gif',
-          left: 'img/you-side-left.gif',
-          right: 'img/you-side-right.gif',
-          down: 'img/you-front.gif'
+          up: 'img/ggj/guy-up.png',
+          left: 'img/ggj/guy-left.png',
+          right: 'img/ggj/guy-right.png',
+          down: 'img/ggj/guy-down.png'
         };
 
         var othersTextures = {
@@ -87,6 +88,8 @@
         // 1 means no smoothing. 0.1 is quite smooth.
         var CAMERA_SMOOTHING = 0.1;
         var BACKGROUND_TEXTURE = 'img/background-texture.png';
+        var SPEAR_TEXTURE = 'img/ggj/spear2.png';
+        var SURFBOARD_TEXTURE = 'img/ggj/surfboard2.png';
 
         socket.emit('getWorldInfo', null, function (err, data) {
           PIXEL_SCALE = data.pixelScale;
@@ -124,7 +127,8 @@
             up: game.input.keyboard.addKey(Phaser.Keyboard.UP),
             down: game.input.keyboard.addKey(Phaser.Keyboard.DOWN),
             right: game.input.keyboard.addKey(Phaser.Keyboard.RIGHT),
-            left: game.input.keyboard.addKey(Phaser.Keyboard.LEFT)
+            left: game.input.keyboard.addKey(Phaser.Keyboard.LEFT),
+            space: game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
           };
 
           game.load.image('background', BACKGROUND_TEXTURE);
@@ -149,6 +153,8 @@
           game.load.image('grass-3', grassTextures[3]);
           game.load.image('grass-4', grassTextures[4]);
 
+          game.load.image('spear', SPEAR_TEXTURE);
+          game.load.image('surfboard', SURFBOARD_TEXTURE);
           game.load.image('tiles', 'img/ggj/wave2.png');
         }
 
@@ -214,23 +220,50 @@
             user.sprite.x = p3.x;
             user.sprite.y = p3.y;
           }
-          // var deltaX = user.x - user.sprite.x;
-          // var deltaY = user.y - user.sprite.y;
-          // if (deltaX > 1000 || deltaY > 1000) {
-          //   user.sprite.x = user.x;
-          //   user.sprite.y = user.y;
-          // } else {
-          //   // todo - vector-based movement
-          //   user.sprite.x += Math.min(deltaX, game.time.elapsed * 0.1);
-          //   user.sprite.y += Math.min(deltaY, game.time.elapsed * 0.1);
-          // }
-
           if (!user.direction) {
             user.direction = 'down';
           }
           user.sprite.loadTexture(user.texturePrefix + '-' + user.direction);
 
-          user.label.alignTo(user.sprite, Phaser.BOTTOM_CENTER, 0, 10);
+          user.surfboardSprite.x = user.sprite.x;
+          user.surfboardSprite.y = user.sprite.y + 20;
+
+          if (user.direction === 'up') {
+            user.weaponSprite.angle = 0;
+            user.weaponSprite.x = user.sprite.x;
+            user.weaponSprite.y = user.sprite.y;
+            user.surfboardSprite.angle = 270;
+          } else if (user.direction === 'down') {
+            user.weaponSprite.angle = 180;
+            user.weaponSprite.x = user.sprite.x;
+            user.weaponSprite.y = user.sprite.y;
+            user.surfboardSprite.angle = 90;
+          } else if (user.direction === 'left') {
+            user.weaponSprite.angle = 270;
+            user.weaponSprite.x = user.sprite.x;
+            user.weaponSprite.y = user.sprite.y;
+            user.surfboardSprite.angle = 180;
+          } else if (user.direction === 'right') {
+            user.weaponSprite.angle = 90;
+            user.weaponSprite.x = user.sprite.x;
+            user.weaponSprite.y = user.sprite.y;
+            user.surfboardSprite.angle = 0;
+          }
+          if (!user.attackTimer)
+            user.attackTimer = 0;
+          if (!user.processedAttackCount)
+            user.processedAttackCount = 0;
+          user.attackTimer -= game.time.elapsed;
+          if (user.attackTimer <= 0)
+            user.weaponSprite.visible = false;
+          if (user.attacking && user.attackCount > user.processedAttackCount) {
+            user.weaponSprite.visible = true;
+            user.attackTimer = ATTACK_ANIM_TIME;
+            user.attacking = false;
+            user.processedAttackCount = user.attackCount;
+          }
+
+          user.label.alignTo(user.sprite, Phaser.TOP_CENTER, 0, 0);
         }
 
         function moveUser(userId, x, y) {
@@ -249,6 +282,7 @@
           var user = users[userData.id];
           if (user) {
             user.sprite.destroy();
+            user.weaponSprite.destroy();
             user.label.destroy();
             delete users[userData.id];
           }
@@ -296,12 +330,22 @@
             user.texturePrefix = 'others';
           }
 
+          var weaponSprite = createTexturedSprite({ texture: 'spear' });
+          var weaponSprite = game.add.sprite(0, 0, 'spear');
+          weaponSprite.anchor.setTo(0.5, 1);
+
+          var surfboardSprite = createTexturedSprite({ texture: 'surfboard' });
+          var surfboardSprite = game.add.sprite(0, 0, 'surfboard');
+          surfboardSprite.anchor.setTo(0.5, 0.5);
+
           user.score = userData.score;
           user.sprite = sprite;
+          user.weaponSprite = weaponSprite;
+          user.surfboardSprite = surfboardSprite;
 
-          user.sprite.width = Math.round(userData.diam * 0.73);
-          user.sprite.height = userData.diam;
-          user.diam = user.sprite.width;
+          // user.sprite.width = Math.round(userData.diam * 0.73);
+          // user.sprite.height = userData.diam;
+          // user.diam = user.sprite.width;
 
           moveUser(userData.id, userData.x, userData.y);
 
@@ -330,7 +374,14 @@
           });
           usersArray.forEach(function (user) {
             user.label.bringToTop();
-            user.sprite.bringToTop();
+            user.surfboardSprite.bringToTop();
+            if (user.direction === 'up') {
+              user.weaponSprite.bringToTop();
+              user.sprite.bringToTop();
+            } else {
+              user.sprite.bringToTop();
+              user.weaponSprite.bringToTop();
+            }
           });
         }
 
@@ -339,6 +390,8 @@
           if (user) {
             user.score = userData.score;
             user.direction = userData.direction;
+            user.attacking = userData.attacking;
+            user.attackCount = userData.attackCount;
             moveUser(userData.id, userData.x, userData.y);
           } else {
             createUserSprite(userData);
@@ -425,6 +478,10 @@
           }
           if (keys.left.isDown) {
             playerOp.l = 1;
+            didAction = true;
+          }
+          if (keys.space.isDown) {
+            playerOp.a = 1;
             didAction = true;
           }
           if (didAction && Date.now() - lastActionTime >= USER_INPUT_INTERVAL) {
