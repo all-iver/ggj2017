@@ -39,6 +39,9 @@
         users = {};
         coins = {};
 
+        var PIXEL_SCALE;
+        var TILE_SIZE;
+        var LEVEL_SIZE;
         var WORLD_WIDTH;
         var WORLD_HEIGHT;
         var WORLD_COLS;
@@ -82,10 +85,13 @@
         };
 
         // 1 means no smoothing. 0.1 is quite smooth.
-        var CAMERA_SMOOTHING = 1;
+        var CAMERA_SMOOTHING = 0.1;
         var BACKGROUND_TEXTURE = 'img/background-texture.png';
 
         socket.emit('getWorldInfo', null, function (err, data) {
+          PIXEL_SCALE = data.pixelScale;
+          TILE_SIZE = data.tileSize;
+          LEVEL_SIZE = data.levelSize;
           WORLD_WIDTH = data.width;
           WORLD_HEIGHT = data.height;
           WORLD_COLS = data.cols;
@@ -142,6 +148,30 @@
           game.load.image('grass-2', grassTextures[2]);
           game.load.image('grass-3', grassTextures[3]);
           game.load.image('grass-4', grassTextures[4]);
+
+          game.load.image('tiles', 'img/ggj/wave2.png');
+        }
+
+        function loadLevel() {
+          var data = '';
+
+          for (var y = 0; y < LEVEL_SIZE.height; y++){
+            for (var x = 0; x < LEVEL_SIZE.width; x++) {
+              data += game.rnd.between(0, 5).toString();
+              if (x < LEVEL_SIZE.width) {
+                data += ',';
+              }
+            }
+            if (y < LEVEL_SIZE.height) {
+              data += "\n";
+            }
+          }
+
+          game.cache.addTilemap('dynamicMap', null, data, Phaser.Tilemap.CSV);
+          map = game.add.tilemap('dynamicMap', TILE_SIZE, TILE_SIZE);
+          map.addTilesetImage('tiles', 'tiles', TILE_SIZE, TILE_SIZE);
+          layer = map.createLayer(0);
+          layer.resizeWorld();
         }
 
         function handleCellData(stateList) {
@@ -321,7 +351,9 @@
         }
 
         function create() {
-          background = game.add.tileSprite(0, 0, WORLD_WIDTH, WORLD_HEIGHT, 'background');
+          loadLevel();
+
+          // background = game.add.tileSprite(0, 0, WORLD_WIDTH, WORLD_HEIGHT, 'background');
           game.time.advancedTiming = true;
           game.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 

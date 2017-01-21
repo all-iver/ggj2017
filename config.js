@@ -1,16 +1,26 @@
 // Global configuration options for IOGrid back end
 
+var PIXEL_SCALE = 5;
+var TILE_SIZE = 16 * PIXEL_SCALE;
+var LEVEL_SIZE = { width: 50, height: 50 }; // in tiles
+var WORLD_WIDTH = LEVEL_SIZE.width * TILE_SIZE; // in pixels
+var WORLD_HEIGHT = LEVEL_SIZE.height * TILE_SIZE; // in pixels
+
 module.exports = {
+  PIXEL_SCALE: PIXEL_SCALE,
+  TILE_SIZE: TILE_SIZE,
+  LEVEL_SIZE: LEVEL_SIZE,
+
   // Having a large world (lower player density) is more efficient.
   // You can divide it up into cells to split up the workload between
   // multiple CPU cores.
-  WORLD_WIDTH: 4000,
-  WORLD_HEIGHT: 4000,
+  WORLD_WIDTH: WORLD_WIDTH,
+  WORLD_HEIGHT: WORLD_HEIGHT,
   // Dividing the world into tall vertical strips (instead of square cells)
   // tends to be more efficient (but this may vary depending on your use case
   // and world size).
-  WORLD_CELL_WIDTH: 1000,
-  WORLD_CELL_HEIGHT: 4000,
+  WORLD_CELL_WIDTH: WORLD_WIDTH / 4,
+  WORLD_CELL_HEIGHT: WORLD_HEIGHT,
   /*
     The WORLD_CELL_OVERLAP_DISTANCE allows players/states from two different
     cells on the grid to interact with one another.

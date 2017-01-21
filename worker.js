@@ -16,6 +16,9 @@ var scCodecMinBin = require('sc-codec-min-bin');
 var config = require('./config');
 var CellController = require('./cell');
 
+var PIXEL_SCALE = config.PIXEL_SCALE;
+var TILE_SIZE = config.TILE_SIZE;
+var LEVEL_SIZE = config.LEVEL_SIZE;
 var WORLD_WIDTH = config.WORLD_WIDTH;
 var WORLD_HEIGHT = config.WORLD_HEIGHT;
 var WORLD_CELL_WIDTH = config.WORLD_CELL_WIDTH;
@@ -694,6 +697,9 @@ module.exports.run = function (worker) {
     socket.on('getWorldInfo', function (data, respond) {
       // The first argument to respond can optionally be an Error object.
       respond(null, {
+        pixelScale: PIXEL_SCALE,
+        tileSize: TILE_SIZE,
+        levelSize: LEVEL_SIZE,
         width: WORLD_WIDTH,
         height: WORLD_HEIGHT,
         cols: WORLD_COLS,
