@@ -16,9 +16,10 @@
 
 .title {
     color: deepskyblue;
-    font-size: 30pt;
+    font-size: 40pt;
     margin-top: 0;
     padding-top: 0;
+    margin-bottom: 30px;
 }
 
 .intro-box input {
@@ -39,4 +40,11 @@
     padding-left: 20px;
     color: white;
     background-color: deepskyblue;
+}
+
+.audio-button {
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: 5px;
 }

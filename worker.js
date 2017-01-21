@@ -713,8 +713,8 @@ module.exports.run = function (worker) {
     });
 
     socket.on('join', function (playerOptions, respond) {
-      if (socket.player)
-        stateManager.delete(socket.player);
+      // if (socket.player)
+      //   stateManager.delete(socket.player);
 
       var startingPos = getRandomPosition(PLAYER_DIAMETER, PLAYER_DIAMETER);
       var player = {

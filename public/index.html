@@ -26,12 +26,14 @@
   </head>
   <body>
     <div class="intro-box popup">
-      <h4 class="title">WWWWW</h4>
+      <h4 class="title">SURFWAVER</h4>
       <form class="play-game-form">
         <input class="nickname" type="text" name="name" placeholder="Nickname" />
         <button type="submit">Play</button>
       </form>
     </div>
+    <img class="audio-button mute" src="img/icons/icon_vol-mute_alt.png" />
+    <img class="audio-button unmute" src="img/icons/icon_volume-high_alt.png" />
 
     <script type="text/javascript">
 
@@ -41,6 +43,17 @@
 
       window.onload = function () {
         $('.play-game-form').on('submit', playGame);
+        $('.mute').on('click', () => { 
+          game.sound.mute = true;
+          $('.mute').hide();
+          $('.unmute').show();
+        });
+        $('.unmute').on('click', () => { 
+          game.sound.mute = false;
+          $('.unmute').hide();
+          $('.mute').show();
+        });
+        $('.unmute').hide();
 
         //  Note that this html file is set to pull down Phaser from our public/ directory.
         //  Although it will work fine with this tutorial, it's almost certainly not the most current version.
@@ -201,7 +214,7 @@
         function handleCellData(stateList) {
           stateList.forEach(function (state) {
             if (state.type == 'player') {
-              updateUser(state);
+                updateUser(state);
             } else if (state.type == 'coin') {
               if (state.delete) {
                 removeCoin(state);
@@ -446,16 +459,20 @@
         }
 
         var isPlaying = false;
+        var isJoining = false;
 
         function joinWorld() {
-          if (!isPlaying)
+          if (!isPlaying || isJoining)
             return;
+          console.log("join world");
+          isJoining = true;
           var name = $('.nickname').val();
           if (!name)
             name = 'user-' + Math.round(Math.random() * 10000);
           socket.emit('join', {
             name: name,
           }, function (err, playerData) {
+            isJoining = false;
             playerId = playerData.id;
             updateCellWatchers(playerData, 'cell-data', handleCellData);
           });
@@ -468,12 +485,28 @@
           e.preventDefault();
           return false;
         }
+        
+        function die() {
+            console.log("died");
+            isPlaying = false;
+            removeAllUserSprites();
+            $('.intro-box').show();
+        }
+
+        function removeAllUserSprites() {
+          for (var i in users) {
+            if (users.hasOwnProperty(i)) {
+              removeUser(users[i]);
+            }
+          }
+          // die();
+        }
 
         function create() {
           loadLevel();
 
           soundtrack = game.add.audio('soundtrack');
-          game.sound.setDecodedCallback('soundtrack', () => { soundtrack.loopFull(); }, this);
+          game.sound.setDecodedCallback('soundtrack', () => { soundtrack.loopFull(0.1); }, this);
 
           // background = game.add.tileSprite(0, 0, WORLD_WIDTH, WORLD_HEIGHT, 'background');
           game.time.advancedTiming = true;
@@ -491,20 +524,21 @@
           //   });
           // }
 
-          function removeAllUserSprites() {
-            for (var i in users) {
-              if (users.hasOwnProperty(i)) {
-                removeUser(users[i]);
-              }
-            }
-          }
+          // function removeAllUserSprites() {
+          //   for (var i in users) {
+          //     if (users.hasOwnProperty(i)) {
+          //       removeUser(users[i]);
+          //     }
+          //   }
+          //   die();
+          // }
 
           // if (socket.state == 'open') {
           //   joinWorld();
           // }
           // For reconnect
           socket.on('connect', joinWorld);
-          socket.on('disconnect', removeAllUserSprites);
+          socket.on('disconnect', () => { console.log('died from disconnect'); die(); });
         }
 
         var lastActionTime = 0;
@@ -513,6 +547,9 @@
         var tileAnimTimer = 0;
 
         function update() {
+          if (!isPlaying)
+            return;
+
           var didAction = false;
           var playerOp = {};
           if (keys.up.isDown) {
@@ -531,10 +568,10 @@
             playerOp.l = 1;
             didAction = true;
           }
-          if (keys.space.isDown) {
-            playerOp.a = 1;
-            didAction = true;
-          }
+          // if (keys.space.isDown) {
+          //   playerOp.a = 1;
+          //   didAction = true;
+          // }
           if (didAction && Date.now() - lastActionTime >= USER_INPUT_INTERVAL) {
             lastActionTime = Date.now();
             // Send the player operations for the server to process.
