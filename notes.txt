@@ -1,3 +1,6 @@
 Can't get this working on elastic beanstalk with load balancing...turned 
 load balancing off for now.  Micro instances are throttled!  Take it easy
 on CPU.
+
+How to update nginx on elastic beanstalk:
+http://stackoverflow.com/questions/24860426/nginx-config-file-overwritten-during-elastic-beanstalk-deployment
