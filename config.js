@@ -29,7 +29,7 @@ module.exports = {
     but will increase lag. 20ms is actually really fast - If you add some sort of
     motion smoothing on the front end, 50ms or higher should be more than adequate.
   */
-  WORLD_UPDATE_INTERVAL: 20,
+  WORLD_UPDATE_INTERVAL: 50,
   // Delete states which have gone stale (not being updated anymore).
   WORLD_STALE_TIMEOUT: 1000,
   // Coins don't move, so we will only refresh them
