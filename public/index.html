@@ -73,19 +73,22 @@
         };
 
         var botTextures = {
-          up: 'img/bot-back.gif',
-          left: 'img/bot-side-left.gif',
-          right: 'img/bot-side-right.gif',
-          down: 'img/bot-front.gif'
+          up: 'img/ggj/shark-up-2.png',
+          left: 'img/ggj/shark-left-2.png',
+          right: 'img/ggj/shark-right-2.png',
+          down: 'img/ggj/shark-down-2.png'
         };
 
         // Map the score value to the texture.
-        var grassTextures = {
-          1: 'img/grass-1.gif',
-          2: 'img/grass-2.gif',
-          3: 'img/grass-3.gif',
-          4: 'img/grass-4.gif'
+        var woodTextures = {
+          1: 'img/ggj/wood-1-2.png',
         };
+        // var grassTextures = {
+        //   1: 'img/grass-1.gif',
+        //   2: 'img/grass-2.gif',
+        //   3: 'img/grass-3.gif',
+        //   4: 'img/grass-4.gif'
+        // };
 
         // 1 means no smoothing. 0.1 is quite smooth.
         var CAMERA_SMOOTHING = 0.1;
@@ -150,10 +153,10 @@
           game.load.image('bot-right', botTextures.right);
           game.load.image('bot-left', botTextures.left);
 
-          game.load.image('grass-1', grassTextures[1]);
-          game.load.image('grass-2', grassTextures[2]);
-          game.load.image('grass-3', grassTextures[3]);
-          game.load.image('grass-4', grassTextures[4]);
+          game.load.image('wood-1', woodTextures[1]);
+          // game.load.image('grass-2', grassTextures[2]);
+          // game.load.image('grass-3', grassTextures[3]);
+          // game.load.image('grass-4', grassTextures[4]);
 
           game.load.image('spear', SPEAR_TEXTURE);
           game.load.image('surfboard', SURFBOARD_TEXTURE);
@@ -313,6 +316,8 @@
 
           user.label = game.add.text(0, 0, user.name, textStyle);
           user.label.anchor.set(0.5);
+          if (userData.subtype === 'bot')
+            user.label.visible = false;
 
           var sprite;
 
@@ -416,7 +421,8 @@
             var coin = coinData;
             coins[coinData.id] = coin;
             coin.sprite = createTexturedSprite({
-              texture: 'grass-' + (coinData.t || '1')
+              // texture: 'grass-' + (coinData.t || '1')
+              texture: 'wood-1'
             });
             coin.sprite.x = coinData.x;
             coin.sprite.y = coinData.y;

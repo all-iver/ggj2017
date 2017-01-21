@@ -69,25 +69,25 @@ module.exports = {
     {
       type: 4,
       value: 1,
-      radius: 10,
+      radius: 20,
       probability: 0.25
     },
     {
       type: 3,
       value: 2,
-      radius: 10,
+      radius: 20,
       probability: 0.6
     },
     {
       type: 2,
       value: 6,
-      radius: 10,
+      radius: 20,
       probability: 0.1
     },
     {
       type: 1,
       value: 12,
-      radius: 10,
+      radius: 20,
       probability: 0.05
     }
   ],
