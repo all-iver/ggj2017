@@ -3,7 +3,9 @@
   <head>
     <title>Hello Phaser!</title>
     <link rel="icon" type="image/png" href="/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="styles.css"> 
     <script type="text/javascript" src="/socketcluster.js"></script>
+    <script src="/jquery.slim.min.js"></script>
     <script src="/sc-codec-min-bin.js"></script>
     <script src="/phaser.min.js"></script>
     <script src="/rbush.min.js"></script>
@@ -23,6 +25,14 @@
     </style>
   </head>
   <body>
+    <div class="intro-box popup">
+      <h4 class="title">WWWWW</h4>
+      <form class="play-game-form">
+        <input class="nickname" type="text" name="name" placeholder="Nickname" />
+        <button type="submit">Play</button>
+      </form>
+    </div>
+
     <script type="text/javascript">
 
       var socket = socketCluster.connect({
@@ -30,6 +40,7 @@
       });
 
       window.onload = function () {
+        $('.play-game-form').on('submit', playGame);
 
         //  Note that this html file is set to pull down Phaser from our public/ directory.
         //  Although it will work fine with this tutorial, it's almost certainly not the most current version.
@@ -161,6 +172,8 @@
           game.load.image('spear', SPEAR_TEXTURE);
           game.load.image('surfboard', SURFBOARD_TEXTURE);
           game.load.image('tiles', 'img/ggj/wave2.png');
+
+          game.load.audio('soundtrack', 'GGJ2017 sketch1.mp3');
         }
 
         function loadLevel() {
@@ -346,6 +359,8 @@
           var surfboardSprite = game.add.sprite(0, 0, 'surfboard');
           surfboardSprite.anchor.setTo(0.5, 0.5);
 
+          var soundtrack;
+
           user.score = userData.score;
           user.sprite = sprite;
           user.weaponSprite = weaponSprite;
@@ -430,8 +445,35 @@
           }
         }
 
+        var isPlaying = false;
+
+        function joinWorld() {
+          if (!isPlaying)
+            return;
+          var name = $('.nickname').val();
+          if (!name)
+            name = 'user-' + Math.round(Math.random() * 10000);
+          socket.emit('join', {
+            name: name,
+          }, function (err, playerData) {
+            playerId = playerData.id;
+            updateCellWatchers(playerData, 'cell-data', handleCellData);
+          });
+        }
+
+        function playGame(e) {
+          $('.intro-box').hide();
+          isPlaying = true;
+          joinWorld();
+          e.preventDefault();
+          return false;
+        }
+
         function create() {
           loadLevel();
+
+          soundtrack = game.add.audio('soundtrack');
+          game.sound.setDecodedCallback('soundtrack', () => { soundtrack.loopFull(); }, this);
 
           // background = game.add.tileSprite(0, 0, WORLD_WIDTH, WORLD_HEIGHT, 'background');
           game.time.advancedTiming = true;
@@ -440,14 +482,14 @@
           // Generate a random name for the user.
           var playerName = 'user-' + Math.round(Math.random() * 10000);
 
-          function joinWorld() {
-            socket.emit('join', {
-              name: playerName,
-            }, function (err, playerData) {
-              playerId = playerData.id;
-              updateCellWatchers(playerData, 'cell-data', handleCellData);
-            });
-          }
+          // function joinWorld() {
+          //   socket.emit('join', {
+          //     name: playerName,
+          //   }, function (err, playerData) {
+          //     playerId = playerData.id;
+          //     updateCellWatchers(playerData, 'cell-data', handleCellData);
+          //   });
+          // }
 
           function removeAllUserSprites() {
             for (var i in users) {
@@ -457,9 +499,9 @@
             }
           }
 
-          if (socket.state == 'open') {
-            joinWorld();
-          }
+          // if (socket.state == 'open') {
+          //   joinWorld();
+          // }
           // For reconnect
           socket.on('connect', joinWorld);
           socket.on('disconnect', removeAllUserSprites);

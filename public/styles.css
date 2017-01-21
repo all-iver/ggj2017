@@ -1,0 +1,42 @@
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+.intro-box {
+    background-color: tan;
+    padding: 50px;
+    border-radius: 15px;
+    border: 2px solid black;
+    text-align: center;
+}
+
+.title {
+    color: deepskyblue;
+    font-size: 30pt;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.intro-box input {
+    padding: 10px;
+    border-radius: 15px;
+    border: none;
+    width: 100%;
+    font-size: 20pt;
+}
+
+.intro-box button {
+    margin-top: 25px;
+    padding: 10px;
+    border: none;
+    border-radius: 25px;
+    font-size: 25pt;
+    padding-right: 20px;
+    padding-left: 20px;
+    color: white;
+    background-color: deepskyblue;
+}
