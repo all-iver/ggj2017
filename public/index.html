@@ -39,6 +39,8 @@
         users = {};
         coins = {};
 
+        var map, waveLayer;
+
         var PIXEL_SCALE;
         var TILE_SIZE;
         var LEVEL_SIZE;
@@ -163,7 +165,7 @@
 
           for (var y = 0; y < LEVEL_SIZE.height; y++){
             for (var x = 0; x < LEVEL_SIZE.width; x++) {
-              data += game.rnd.between(0, 4).toString();
+              data += '0'; //game.rnd.between(0, 4).toString();
               if (x < LEVEL_SIZE.width) {
                 data += ',';
               }
@@ -176,8 +178,8 @@
           game.cache.addTilemap('dynamicMap', null, data, Phaser.Tilemap.CSV);
           map = game.add.tilemap('dynamicMap', TILE_SIZE, TILE_SIZE);
           map.addTilesetImage('tiles', 'tiles', TILE_SIZE, TILE_SIZE);
-          layer = map.createLayer(0);
-          layer.resizeWorld();
+          waveLayer = map.createLayer(0);
+          waveLayer.resizeWorld();
         }
 
         function handleCellData(stateList) {
@@ -459,7 +461,7 @@
 
         var lastActionTime = 0;
         var tileCycle = 0;
-        var tileAnimInterval = 500;
+        var tileAnimInterval = 100;
         var tileAnimTimer = 0;
 
         function update() {
@@ -493,13 +495,17 @@
           tileAnimTimer += game.time.elapsed;
           if (tileAnimTimer > tileAnimInterval) {
             tileAnimTimer = 0;
-            map.replace(4, 20);
+            map.replace(5, 0);
+            map.replace(4, 5);
             map.replace(3, 4);
             map.replace(2, 3);
             map.replace(1, 2);
-            map.replace(0, 1);
-            map.replace(20, 0);
           }
+
+          var tile = map.getTile(Math.round(Math.random() * (LEVEL_SIZE.width - 1)),
+              Math.round(Math.random() * (LEVEL_SIZE.height - 1)), waveLayer);
+          if (tile.index === 0)
+            tile.index = 1;
         }
 
         function render() {
