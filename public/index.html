@@ -157,7 +157,7 @@
 
           for (var y = 0; y < LEVEL_SIZE.height; y++){
             for (var x = 0; x < LEVEL_SIZE.width; x++) {
-              data += game.rnd.between(0, 5).toString();
+              data += game.rnd.between(0, 4).toString();
               if (x < LEVEL_SIZE.width) {
                 data += ',';
               }
@@ -204,8 +204,26 @@
         }
 
         function updateUserGraphics(user) {
-          user.sprite.x = user.x;
-          user.sprite.y = user.y;
+          var p1 = new Phaser.Point(user.sprite.x, user.sprite.y);
+          var p2 = new Phaser.Point(user.x, user.y);
+          if (Phaser.Point.distance(p1, p2) > 20) {
+            user.sprite.x = user.x;
+            user.sprite.y = user.y;
+          } else {
+            var p3 = Phaser.Point.interpolate(p1, p2, 0.5);
+            user.sprite.x = p3.x;
+            user.sprite.y = p3.y;
+          }
+          // var deltaX = user.x - user.sprite.x;
+          // var deltaY = user.y - user.sprite.y;
+          // if (deltaX > 1000 || deltaY > 1000) {
+          //   user.sprite.x = user.x;
+          //   user.sprite.y = user.y;
+          // } else {
+          //   // todo - vector-based movement
+          //   user.sprite.x += Math.min(deltaX, game.time.elapsed * 0.1);
+          //   user.sprite.y += Math.min(deltaY, game.time.elapsed * 0.1);
+          // }
 
           if (!user.direction) {
             user.direction = 'down';
@@ -386,6 +404,9 @@
         }
 
         var lastActionTime = 0;
+        var tileCycle = 0;
+        var tileAnimInterval = 500;
+        var tileAnimTimer = 0;
 
         function update() {
           var didAction = false;
@@ -411,6 +432,16 @@
             // Send the player operations for the server to process.
             socket.emit('action', playerOp);
           }
+          tileAnimTimer += game.time.elapsed;
+          if (tileAnimTimer > tileAnimInterval) {
+            tileAnimTimer = 0;
+            map.replace(4, 20);
+            map.replace(3, 4);
+            map.replace(2, 3);
+            map.replace(1, 2);
+            map.replace(0, 1);
+            map.replace(20, 0);
+          }
         }
 
         function render() {
@@ -428,6 +459,8 @@
               var curUser = users[i];
               if (now - curUser.clientProcessed > PLAYER_INACTIVITY_TIMEOUT) {
                 removeUser(curUser);
+              } else {
+                updateUserGraphics(curUser);
               }
             }
           }
