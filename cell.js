@@ -190,6 +190,8 @@ CellController.prototype.generateBotOps = function (playerIds, players, coins) {
 
   playerIds.forEach(function (playerId) {
     var player = players[playerId];
+    if (player.dead)
+      return;
     // States which are external are managed by a different cell, therefore changes made to these
     // states are not saved unless they are grouped with one or more internal states from the current cell.
     // See util.groupStates() method near the bottom of this file for details.
@@ -235,6 +237,8 @@ CellController.prototype.applyPlayerOps = function (playerIds, players, coins) {
 
   playerIds.forEach(function (playerId) {
     var player = players[playerId];
+    if (player.dead)
+      return;
 
     if (!player.lastAttack)
       player.lastAttack = 0;
@@ -321,6 +325,8 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
 
   playerIds.forEach(function (playerId) {
     var player = players[playerId];
+    if (player.dead)
+      return;
     player.hitArea = self.generateHitArea(player);
     hitAreaList.push(player.hitArea);
   });
@@ -329,6 +335,8 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
 
   playerIds.forEach(function (playerId) {
     var player = players[playerId];
+    if (player.dead)
+      return;
     playerTree.remove(player.hitArea);
     var hitList = playerTree.search(player.hitArea);
     playerTree.insert(player.hitArea);
@@ -360,6 +368,8 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
   });
 
   playerIds.forEach(function (playerId) {
+    if (players[playerId].dead)
+      return;
     delete players[playerId].hitArea;
   });
 };

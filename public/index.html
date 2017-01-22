@@ -428,9 +428,14 @@
             user.direction = userData.direction;
             user.attacking = userData.attacking;
             user.attackCount = userData.attackCount;
+            user.dead = userData.dead;
             moveUser(userData.id, userData.x, userData.y);
+            if (isPlaying && user.dead && user.id === playerId) {
+              die();
+            }
           } else {
-            createUserSprite(userData);
+            if (!userData.dead)
+              createUserSprite(userData);
           }
         }
 
@@ -487,6 +492,7 @@
         }
         
         function die() {
+            game.camera.unfollow();
             console.log("died");
             isPlaying = false;
             removeAllUserSprites();
@@ -606,7 +612,7 @@
           for (var i in users) {
             if (users.hasOwnProperty(i)) {
               var curUser = users[i];
-              if (now - curUser.clientProcessed > PLAYER_INACTIVITY_TIMEOUT) {
+              if (curUser.dead || now - curUser.clientProcessed > PLAYER_INACTIVITY_TIMEOUT) {
                 removeUser(curUser);
               } else {
                 updateUserGraphics(curUser);
