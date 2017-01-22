@@ -3,6 +3,7 @@
 var PIXEL_SCALE = 5;
 var TILE_SIZE = 16 * PIXEL_SCALE;
 var LEVEL_SIZE = { width: 50, height: 50 }; // in tiles
+var BEACH_SIZE = 15; // in tiles from the bottom
 var WORLD_WIDTH = LEVEL_SIZE.width * TILE_SIZE; // in pixels
 var WORLD_HEIGHT = LEVEL_SIZE.height * TILE_SIZE; // in pixels
 
@@ -10,6 +11,7 @@ module.exports = {
   PIXEL_SCALE: PIXEL_SCALE,
   TILE_SIZE: TILE_SIZE,
   LEVEL_SIZE: LEVEL_SIZE,
+  BEACH_SIZE: BEACH_SIZE,
 
   // Having a large world (lower player density) is more efficient.
   // You can divide it up into cells to split up the workload between
@@ -49,13 +51,13 @@ module.exports = {
     // 50: ['wave']
   },
 
-  PLAYER_DEFAULT_MOVE_SPEED: 8,
+  PLAYER_DEFAULT_MOVE_SPEED: 6,
   PLAYER_DIAMETER: 45,
   PLAYER_MASS: 20,
 
   // Note that the number of bots needs to be either 0 or a multiple of the number of
   // worker processes or else it will get rounded up/down.
-  BOT_COUNT: 10,
+  BOT_COUNT: 12,
   BOT_MOVE_SPEED: 10,
   BOT_MASS: 10,
   BOT_DEFAULT_DIAMETER: 45,

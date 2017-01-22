@@ -6,7 +6,7 @@ var WAVE_DEFAULT_SPEED = 5;
 var WaveManager = function (options) {
   this.worldWidth = options.worldWidth;
   this.worldHeight = options.worldHeight;
-  this.waveDropInterval = 1000;//options.waveDropInterval;
+  this.waveDropInterval = 700;//options.waveDropInterval;
 //   this.waveMaxCount = 50;
   this.waveCount = 0;
   if (options.waveMoveSpeed == null) {
@@ -18,15 +18,17 @@ var WaveManager = function (options) {
 
 WaveManager.prototype.generateRandomPosition = function () {
   var position = {
-    x: 0,
-    y: Math.round((Math.random() - 0.5) * (this.worldHeight * 0.5) + this.worldHeight * 0.5)
+    x: Math.round(Math.random() * this.worldWidth),
+    y: Math.round(Math.random() * (this.worldHeight * 0.5))
   };
-  if (Math.random() > 0.5) {
-      position.x = 5;
-  } else {
-      position.x = this.worldWidth - 5;
-  }
-  position.x = Math.round(position.x);
+  if (Math.random() > 0.5)
+    position.y = Math.round(Math.random() * (this.worldHeight * 0.25));
+//   if (Math.random() > 0.5) {
+//       position.x = 5;
+//   } else {
+//       position.x = this.worldWidth - 5;
+//   }
+//   position.x = Math.round(position.x);
   return position;
 };
 
@@ -37,14 +39,16 @@ WaveManager.prototype.addWave = function (options) {
   var waveId = uuid.v4();
 
 var position = this.generateRandomPosition();
-  var velocity = new SAT.Vector(-(position.x - this.worldWidth / 2), -(position.y - this.worldHeight/2)); //new SAT.Vector(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5);
+//   var velocity = new SAT.Vector(-(position.x - this.worldWidth / 2), -(position.y - this.worldHeight/2)); //new SAT.Vector(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5);
+var multiplier = (this.worldHeight * 0.5 - position.y) / (this.worldHeight * 0.5);
+var velocity = new SAT.Vector(0, 1);
   velocity.normalize();
-  var r = Math.random() * 2.5 + 1;
+  var r = Math.random() * 2.5 * multiplier + 1;
   velocity.x *= r;
   velocity.y *= r;
 //   var velocity = new SAT.Vector(1.0, 2.0);
 //   var angle = Math.atan2(velocity.y, velocity.x);
-  var size = Math.random() * 500 + 300;
+  var size = Math.random() * 500 * multiplier + 300;
 //   var poly = new SAT.Box(new SAT.Vector(0, 0), size, 20).toPolygon();
 //   poly.setAngle(angle);
   var wave = {
@@ -55,7 +59,7 @@ var position = this.generateRandomPosition();
     velocity: velocity,
     started: Date.now(),
     lastCheck: Date.now(),
-    startLifespan: Math.random() * 7000 + 5000,
+    startLifespan: Math.random() * 7000 * multiplier + 5000,
     size: size,
     // angle: angle,
     // poly: poly,

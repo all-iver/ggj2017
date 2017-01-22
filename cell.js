@@ -75,6 +75,7 @@ var CellController = function (options, util) {
 
   this.botManager = new BotManager({
     worldWidth: config.WORLD_WIDTH,
+    beachSize: config.BEACH_SIZE,
     worldHeight: config.WORLD_HEIGHT,
     botDefaultDiameter: config.BOT_DEFAULT_DIAMETER,
     botMoveSpeed: config.BOT_MOVE_SPEED,
@@ -226,10 +227,11 @@ CellController.prototype.generateBotOps = function (playerIds, players, coins) {
     if (player.subtype == 'bot' && !player.external) {
       var radius = Math.round(player.diam / 2);
       var isBotOnEdge = player.x <= radius || player.x >= config.WORLD_WIDTH - radius ||
-        player.y <= radius || player.y >= config.WORLD_HEIGHT - radius;
+          player.y <= radius || player.y >= config.WORLD_HEIGHT - (config.BEACH_SIZE + 3) * 16 * 5 - radius;
+      var isBotPastLowerEdge = player.y >= config.WORLD_HEIGHT - (config.BEACH_SIZE + 3) * 16 * 5;
 
       var didIt = false;
-      if (player.targetId) {
+      if (player.targetId && !isBotPastLowerEdge) {
         var target = players[player.targetId];
         if (target && !target.dead) {
           player.op = {};
@@ -245,6 +247,8 @@ CellController.prototype.generateBotOps = function (playerIds, players, coins) {
         }
       }
       if (!didIt) {
+        if (isBotPastLowerEdge)
+          player.repeatOp = self.botMoves[0];
         if (Math.random() <= player.changeDirProb || isBotOnEdge) {
           var randIndex = Math.floor(Math.random() * self.botMoves.length);
           player.repeatOp = self.botMoves[randIndex];
@@ -287,7 +291,7 @@ CellController.prototype.updateWaves = function (waveIds, waves) {
     wave.y += wave.velocity.y;
     wave.lifespan -= (now - wave.lastCheck);
     wave.lastCheck = now;
-    if (wave.lifespan <= 0)
+    if (wave.lifespan <= 0 || wave.y >= (config.WORLD_HEIGHT - (config.BEACH_SIZE - 1) * 16 * 5))
       wave.delete = 1;
       // this.waveManager.removeWave(wave);
     // if (wave.x > config.WORLD_WIDTH + 150 || wave.x < -150 || wave.y > config.WORLD_HEIGHT + 150 || wave.y < -150)
@@ -317,6 +321,12 @@ CellController.prototype.applyPlayerOps = function (playerIds, players, coins) {
       moveSpeed = player.speed;
     } else {
       moveSpeed = config.PLAYER_DEFAULT_MOVE_SPEED;
+      if (player.y > (config.WORLD_HEIGHT - config.BEACH_SIZE * 16 * 5)) {
+        moveSpeed *= 2;
+        player.onBeach = true;
+      } else {
+        player.onBeach = false;
+      }
     }
 
     if (playerOp) {
@@ -362,6 +372,9 @@ CellController.prototype.applyPlayerOps = function (playerIds, players, coins) {
     if (player.boost) {
       player.x += player.boost.x;
       player.y += player.boost.y;
+      if (!player.boostScore)
+        player.boostScore = 0;
+      player.boostScore += Math.round((((Date.now() - player.startBoost) / 5000) * player.boost.len()));
     }
 
     if (player.playerOverlaps) {
@@ -398,6 +411,7 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
       return;
     if (player.subtype !== 'bot') {
       player.boost = new SAT.Vector(0, 0);
+      player.boosting = false;
       return;
     }
     var minDistance = 999999;
@@ -408,14 +422,15 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
       var player2 = players[p2];
       if (player2.dead || player2.subtype === 'bot')
         return;
+      if (player2.y >= (config.WORLD_HEIGHT - config.BEACH_SIZE * 16 * 5))
+        return;
       var dist = Math.pow(player2.x - player.x, 2) + Math.pow(player2.y - player.y, 2);
       if (dist < 200 * 200 && (dist < minDistance || minTarget === null)) {
         minDistance = dist;
         minTarget = p2;
       }
     });
-    if (minTarget !== null)
-      player.targetId = minTarget;
+    player.targetId = minTarget;
   });
 
   // fix serialized poly back into a SAT poly
@@ -445,10 +460,11 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
       var player = players[playerId];
       if (player.dead || player.subtype === 'bot')
         return;
+      player.boosting = false;
       // var testPos = new SAT.Vector(player.x, player.y);
       var perp = new SAT.Vector(wave.velocity.x, wave.velocity.y);
       perp.perp().normalize();
-      var boostDistance = 50;
+      var boostDistance = 25;
       var size = wave.size - boostDistance/2; // for the edges
       var p1 = new SAT.Vector(wave.x - perp.x * size / 2, wave.y - perp.y * size / 2);
       var p2 = new SAT.Vector(wave.x + perp.x * size / 2, wave.y + perp.y * size / 2);
@@ -456,7 +472,12 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
       if (dist < boostDistance) {
       // if (SAT.pointInPolygon(testPos, poly)) {
         // console.log(p1.x, p1.y, p2.x, p2.y, wave.x, wave.y, wave.size, dist);
+        if (!player.startBoost) {
+          player.startBoost = Date.now();
+          console.log('set it to ' + player.startBoost);
+        }
         player.boost = new SAT.Vector(wave.velocity.x, wave.velocity.y);
+        player.boosting = true;
       }
     });
   });

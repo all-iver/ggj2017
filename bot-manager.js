@@ -9,6 +9,7 @@ var BOT_DEFAULT_CHANGE_DIRECTION_PROBABILITY = 0.01;
 var BotManager = function (options) {
   this.worldWidth = options.worldWidth;
   this.worldHeight = options.worldHeight;
+  this.beachSize = options.beachSize;
   if (options.botMoveSpeed == null) {
     this.botMoveSpeed = BOT_DEFAULT_SPEED;
   } else {
@@ -30,7 +31,7 @@ BotManager.prototype.generateRandomPosition = function (botRadius) {
   var botDiameter = botRadius * 2;
   var position = {
     x: Math.round(Math.random() * (this.worldWidth - botDiameter) + botRadius),
-    y: Math.round(Math.random() * (this.worldHeight - botDiameter) + botRadius)
+    y: Math.round(Math.random() * (this.worldHeight - this.beachSize * 16 * 5 - botDiameter) + botRadius)
   };
   return position;
 };

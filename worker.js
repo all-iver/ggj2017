@@ -19,6 +19,7 @@ var CellController = require('./cell');
 var PIXEL_SCALE = config.PIXEL_SCALE;
 var TILE_SIZE = config.TILE_SIZE;
 var LEVEL_SIZE = config.LEVEL_SIZE;
+var BEACH_SIZE = config.BEACH_SIZE;
 var WORLD_WIDTH = config.WORLD_WIDTH;
 var WORLD_HEIGHT = config.WORLD_HEIGHT;
 var WORLD_CELL_WIDTH = config.WORLD_CELL_WIDTH;
@@ -47,10 +48,10 @@ function getRandomPosition(spriteWidth, spriteHeight) {
   var halfSpriteWidth = spriteWidth / 2;
   var halfSpriteHeight = spriteHeight / 2;
   var widthRandomness = WORLD_WIDTH - spriteWidth;
-  var heightRandomness = WORLD_HEIGHT - spriteHeight;
+  var heightRandomness = BEACH_SIZE * 16 * 5 - spriteHeight;
   return {
     x: Math.round(halfSpriteWidth + widthRandomness * Math.random()),
-    y: Math.round(halfSpriteHeight + heightRandomness * Math.random())
+    y: WORLD_HEIGHT - Math.round(halfSpriteHeight + heightRandomness * Math.random())
   };
 }
 
@@ -700,6 +701,7 @@ module.exports.run = function (worker) {
         pixelScale: PIXEL_SCALE,
         tileSize: TILE_SIZE,
         levelSize: LEVEL_SIZE,
+        beachSize: BEACH_SIZE,
         width: WORLD_WIDTH,
         height: WORLD_HEIGHT,
         cols: WORLD_COLS,

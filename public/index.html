@@ -71,6 +71,7 @@
         var PIXEL_SCALE;
         var TILE_SIZE;
         var LEVEL_SIZE;
+        var BEACH_SIZE;
         var WORLD_WIDTH;
         var WORLD_HEIGHT;
         var WORLD_COLS;
@@ -128,6 +129,7 @@
           PIXEL_SCALE = data.pixelScale;
           TILE_SIZE = data.tileSize;
           LEVEL_SIZE = data.levelSize;
+          BEACH_SIZE = data.beachSize;
           WORLD_WIDTH = data.width;
           WORLD_HEIGHT = data.height;
           WORLD_COLS = data.cols;
@@ -199,7 +201,12 @@
 
           for (var y = 0; y < LEVEL_SIZE.height; y++){
             for (var x = 0; x < LEVEL_SIZE.width; x++) {
-              data += '0'; //game.rnd.between(0, 4).toString();
+              if (y > LEVEL_SIZE.height - BEACH_SIZE)
+                data += '6'; //game.rnd.between(0, 4).toString();
+              else if (y === LEVEL_SIZE.height - BEACH_SIZE)
+                data += '7'; //game.rnd.between(0, 4).toString();
+              else
+                data += '0'; //game.rnd.between(0, 4).toString();
               if (x < LEVEL_SIZE.width) {
                 data += ',';
               }
@@ -305,7 +312,18 @@
             user.processedAttackCount = user.attackCount;
           }
 
+          if (user.onBeach)
+            user.surfboardSprite.alpha = 0;
+          else
+            user.surfboardSprite.alpha = 1;
+
           user.label.alignTo(user.sprite, Phaser.TOP_CENTER, 0, 0);
+          user.scoreLabel.alignTo(user.sprite, Phaser.TOP_CENTER, 0, 20);
+          if (user.boostScore) {
+            user.scoreLabel.text = '' + user.boostScore;
+          } else {
+            user.scoreLabel.text = '0';
+          }
         }
 
         function moveUser(userId, x, y) {
@@ -327,6 +345,7 @@
             user.weaponSprite.destroy();
             user.surfboardSprite.destroy();
             user.label.destroy();
+            user.scoreLabel.destroy();
             delete users[userData.id];
           }
         }
@@ -351,10 +370,20 @@
             align: 'center'
           };
 
+          var scoreTextStyle = {
+            font: '16px Arial',
+            fill: '#00FF00',
+            align: 'center'
+          };
+
           user.label = game.add.text(0, 0, user.name, textStyle);
           user.label.anchor.set(0.5);
-          if (userData.subtype === 'bot')
+          user.scoreLabel = game.add.text(0, 0, "0", scoreTextStyle);
+          user.scoreLabel.anchor.set(0.5);
+          if (userData.subtype === 'bot') {
             user.label.visible = false;
+            user.scoreLabel.visible = false;
+          }
 
           var sprite;
 
@@ -438,6 +467,8 @@
             user.score = userData.score;
             user.direction = userData.direction;
             user.attacking = userData.attacking;
+            user.boostScore = userData.boostScore;
+            user.onBeach = userData.onBeach;
             user.attackCount = userData.attackCount;
             user.dead = userData.dead;
             moveUser(userData.id, userData.x, userData.y);
