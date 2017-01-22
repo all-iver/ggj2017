@@ -19,7 +19,12 @@
     font-size: 40pt;
     margin-top: 0;
     padding-top: 0;
-    margin-bottom: 30px;
+    margin-bottom: 0px;
+}
+
+h2 {
+    margin-top: 0px;
+    color: deepskyblue;
 }
 
 .intro-box input {

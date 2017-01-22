@@ -41,7 +41,9 @@ var rbush = require('rbush');
 var SAT = require('sat');
 var config = require('./config');
 var BotManager = require('./bot-manager').BotManager;
+var WaveManager = require('./wave-manager').WaveManager;
 var CoinManager = require('./coin-manager').CoinManager;
+var distanceToLineSegment = require('distance-to-line-segment');
 
 // This controller will be instantiated once for each
 // cell in our world grid.
@@ -60,9 +62,16 @@ var CellController = function (options, util) {
 
   this.coinMaxCount = Math.round(config.COIN_MAX_COUNT / this.worldCellCount);
   this.coinDropInterval = config.COIN_DROP_INTERVAL * this.worldCellCount;
+  this.waveDropInterval = config.WAVE_DROP_INTERVAL * this.worldCellCount;
   this.botCount = Math.round(config.BOT_COUNT / this.worldCellCount);
 
   var cellData = options.cellData;
+
+  this.waveManager = new WaveManager({
+    worldWidth: config.WORLD_WIDTH,
+    worldHeight: config.WORLD_HEIGHT,
+    waveDropInterval: this.waveDropInterval
+  });
 
   this.botManager = new BotManager({
     worldWidth: config.WORLD_WIDTH,
@@ -98,6 +107,7 @@ var CellController = function (options, util) {
   });
 
   this.lastCoinDrop = 0;
+  this.lastWaveDrop = 0;
 
   config.COIN_TYPES.sort(function (a, b) {
     if (a.probability < b.probability) {
@@ -141,17 +151,35 @@ CellController.prototype.run = function (cellData) {
   if (!cellData.coin) {
     cellData.coin = {};
   }
+  if (!cellData.wave) {
+    cellData.wave = {};
+  }
   var players = cellData.player;
   var coins = cellData.coin;
+  var waves = cellData.wave;
 
   // Sorting is important to achieve consistency across cells.
   var playerIds = Object.keys(players).sort(this.playerCompareFn);
+  var waveIds = Object.keys(waves).sort(this.playerCompareFn);
 
-  this.findPlayerOverlaps(playerIds, players, coins);
+  this.findPlayerOverlaps(playerIds, players, coins, waveIds, waves);
   this.dropCoins(coins);
+  this.dropWaves(waves);
   this.generateBotOps(playerIds, players);
+  this.updateWaves(waveIds, waves);
   this.applyPlayerOps(playerIds, players, coins);
 };
+
+CellController.prototype.dropWaves = function (waves) {
+  var now = Date.now();
+
+  if (now - this.lastWaveDrop >= this.waveManager.waveDropInterval) {
+    this.lastWaveDrop = now;
+    var wave = this.waveManager.addWave();
+    if (wave)
+      waves[wave.id] = wave;
+  }
+}
 
 CellController.prototype.dropCoins = function (coins) {
   var now = Date.now();
@@ -249,6 +277,24 @@ CellController.prototype.keepPlayerOnGrid = function (player) {
   }
 };
 
+CellController.prototype.updateWaves = function (waveIds, waves) {
+  var self = this;
+  var now = Date.now();
+
+  waveIds.forEach(function (waveId) {
+    var wave = waves[waveId];
+    wave.x += wave.velocity.x;
+    wave.y += wave.velocity.y;
+    wave.lifespan -= (now - wave.lastCheck);
+    wave.lastCheck = now;
+    if (wave.lifespan <= 0)
+      wave.delete = 1;
+      // this.waveManager.removeWave(wave);
+    // if (wave.x > config.WORLD_WIDTH + 150 || wave.x < -150 || wave.y > config.WORLD_HEIGHT + 150 || wave.y < -150)
+    //   wave.delete = 1;
+  });
+};
+
 CellController.prototype.applyPlayerOps = function (playerIds, players, coins) {
   var self = this;
   var now = Date.now();
@@ -313,6 +359,11 @@ CellController.prototype.applyPlayerOps = function (playerIds, players, coins) {
       player.y += movementVector.y;
     }
 
+    if (player.boost) {
+      player.x += player.boost.x;
+      player.y += player.boost.y;
+    }
+
     if (player.playerOverlaps) {
       player.playerOverlaps.forEach(function (otherPlayer) {
         self.resolvePlayerCollision(player, otherPlayer);
@@ -335,7 +386,7 @@ CellController.prototype.applyPlayerOps = function (playerIds, players, coins) {
   });
 };
 
-CellController.prototype.findPlayerOverlaps = function (playerIds, players, coins) {
+CellController.prototype.findPlayerOverlaps = function (playerIds, players, coins, waveIds, waves) {
   var self = this;
 
   var playerTree = new rbush();
@@ -343,8 +394,12 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
 
   playerIds.forEach(function (playerId) {
     var player = players[playerId];
-    if (player.dead || player.subtype !== 'bot')
+    if (player.dead)
       return;
+    if (player.subtype !== 'bot') {
+      player.boost = new SAT.Vector(0, 0);
+      return;
+    }
     var minDistance = 999999;
     var minTarget = null;
     playerIds.forEach(function (p2) {
@@ -354,13 +409,56 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
       if (player2.dead || player2.subtype === 'bot')
         return;
       var dist = Math.pow(player2.x - player.x, 2) + Math.pow(player2.y - player.y, 2);
-      if (dist < 300 * 300 && (dist < minDistance || minTarget === null)) {
+      if (dist < 200 * 200 && (dist < minDistance || minTarget === null)) {
         minDistance = dist;
         minTarget = p2;
       }
     });
     if (minTarget !== null)
       player.targetId = minTarget;
+  });
+
+  // fix serialized poly back into a SAT poly
+  fixPoly = function(poly) {
+    if (poly.points[0].dot)
+      return poly;
+    var np = new SAT.Polygon(new SAT.Vector(poly.pos.x, poly.pos.y),
+        poly.points.map((n) => { return new SAT.Vector(n.x, n.y); }));
+    return np;
+  };
+
+  waveIds.forEach(function(waveId) {
+    var wave = waves[waveId];
+    if (!wave)
+      return;
+    // wave.poly = fixPoly(wave.poly);
+    var angle = Math.atan2(wave.velocity.y, wave.velocity.x)
+    var points = [];
+    // var poly = new SAT.Box(new SAT.Vector(wave.x-75/2, wave.y-wave.size/2), 75, wave.size).toPolygon();
+
+    // wave.poly = new SAT.Polygon(new SAT.Vector(0, 0), 
+    //     wave.poly.points.map((n) => { return new SAT.Vector(n.x, n.y); }));
+    // poly.pos = new SAT.Vector(wave.x - 75/2, wave.y + wave.size/2);
+    // poly.setAngle(angle);
+    // poly.pos = new SAT.Vector(wave.x, wave.y);
+    playerIds.forEach(function (playerId) {
+      var player = players[playerId];
+      if (player.dead || player.subtype === 'bot')
+        return;
+      // var testPos = new SAT.Vector(player.x, player.y);
+      var perp = new SAT.Vector(wave.velocity.x, wave.velocity.y);
+      perp.perp().normalize();
+      var boostDistance = 50;
+      var size = wave.size - boostDistance/2; // for the edges
+      var p1 = new SAT.Vector(wave.x - perp.x * size / 2, wave.y - perp.y * size / 2);
+      var p2 = new SAT.Vector(wave.x + perp.x * size / 2, wave.y + perp.y * size / 2);
+      var dist = distanceToLineSegment(p1.x, p1.y, p2.x, p2.y, player.x, player.y);
+      if (dist < boostDistance) {
+      // if (SAT.pointInPolygon(testPos, poly)) {
+        // console.log(p1.x, p1.y, p2.x, p2.y, wave.x, wave.y, wave.size, dist);
+        player.boost = new SAT.Vector(wave.velocity.x, wave.velocity.y);
+      }
+    });
   });
 
   playerIds.forEach(function (playerId) {

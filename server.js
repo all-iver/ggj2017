@@ -6,7 +6,7 @@ var scHotReboot = require('sc-hot-reboot');
 var workerControllerPath = argv.wc || process.env.SOCKETCLUSTER_WORKER_CONTROLLER;
 var brokerControllerPath = argv.bc || process.env.SOCKETCLUSTER_BROKER_CONTROLLER;
 var initControllerPath = argv.ic || process.env.SOCKETCLUSTER_INIT_CONTROLLER;
-var environment = process.env.ENV || 'dev';
+var environment = process.env.NODE_ENV || 'dev';
 
 var options = {
   workers: Number(argv.w) || Number(process.env.SOCKETCLUSTER_WORKERS) || 1,

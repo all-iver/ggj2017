@@ -19,7 +19,7 @@ module.exports = {
   // Dividing the world into tall vertical strips (instead of square cells)
   // tends to be more efficient (but this may vary depending on your use case
   // and world size).
-  WORLD_CELL_WIDTH: WORLD_WIDTH / 4,
+  WORLD_CELL_WIDTH: WORLD_WIDTH,// / 4, // waves don't work unless all cells know about all of them :(
   WORLD_CELL_HEIGHT: WORLD_HEIGHT,
   /*
     The WORLD_CELL_OVERLAP_DISTANCE allows players/states from two different
@@ -46,6 +46,7 @@ module.exports = {
   // once per second.
   SPECIAL_UPDATE_INTERVALS: {
     1000: ['coin']
+    // 50: ['wave']
   },
 
   PLAYER_DEFAULT_MOVE_SPEED: 8,
@@ -62,6 +63,7 @@ module.exports = {
 
   COIN_UPDATE_INTERVAL: 1000,
   COIN_DROP_INTERVAL: 400,
+  WAVE_DROP_INTERVAL: 10000,
   COIN_MAX_COUNT: 200,
   COIN_PLAYER_NO_DROP_RADIUS: 80,
   // The probabilities need to add up to 1.
@@ -98,7 +100,8 @@ module.exports = {
   // to the front end.
   OUTBOUND_STATE_TRANSFORMERS: {
     coin: genericStateTransformer,
-    player: genericStateTransformer
+    player: genericStateTransformer,
+    wave: genericStateTransformer
   }
 };
 

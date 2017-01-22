@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Hello Phaser!</title>
+    <title>SURFWAVER!</title>
     <link rel="icon" type="image/png" href="/favicon.ico">
     <link rel="stylesheet" type="text/css" href="styles.css"> 
     <script type="text/javascript" src="/socketcluster.js"></script>
@@ -27,6 +27,7 @@
   <body>
     <div class="intro-box popup">
       <h4 class="title">SURFWAVER</h4>
+      <h2>Surf with friends!</h2>
       <form class="play-game-form">
         <input class="nickname" type="text" name="name" placeholder="Nickname" />
         <button type="submit">Play</button>
@@ -42,6 +43,7 @@
       });
 
       window.onload = function () {
+        $('.intro-box').hide();
         $('.play-game-form').on('submit', playGame);
         $('.mute').on('click', () => { 
           game.sound.mute = true;
@@ -62,6 +64,7 @@
         var game, playerId, player;
         users = {};
         coins = {};
+        waves = {};
 
         var map, waveLayer;
 
@@ -78,6 +81,7 @@
         var PLAYER_INACTIVITY_TIMEOUT = 700;
         var USER_INPUT_INTERVAL = 20;
         var COIN_INACTIVITY_TIMEOUT = 2200;
+        var WAVE_INACTIVITY_TIMEOUT = 2200;
         var ENVIRONMENT;
         var SERVER_WORKER_ID;
         var ATTACK_ANIM_TIME = 250;
@@ -156,8 +160,8 @@
             up: game.input.keyboard.addKey(Phaser.Keyboard.UP),
             down: game.input.keyboard.addKey(Phaser.Keyboard.DOWN),
             right: game.input.keyboard.addKey(Phaser.Keyboard.RIGHT),
-            left: game.input.keyboard.addKey(Phaser.Keyboard.LEFT),
-            space: game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+            left: game.input.keyboard.addKey(Phaser.Keyboard.LEFT)
+            // space: game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
           };
 
           game.load.image('background', BACKGROUND_TEXTURE);
@@ -178,13 +182,14 @@
           game.load.image('bot-left', botTextures.left);
 
           game.load.image('wood-1', woodTextures[1]);
-          // game.load.image('grass-2', grassTextures[2]);
+          game.load.image('grass-1', 'img/grass-1.gif');
           // game.load.image('grass-3', grassTextures[3]);
           // game.load.image('grass-4', grassTextures[4]);
 
           game.load.image('spear', SPEAR_TEXTURE);
           game.load.image('surfboard', SURFBOARD_TEXTURE);
           game.load.image('tiles', 'img/ggj/wave2.png');
+          game.load.image('wave-particle', 'img/ggj/waveparticle-2.png');
 
           game.load.audio('soundtrack', 'GGJ2017 sketch1.mp3');
         }
@@ -215,6 +220,12 @@
           stateList.forEach(function (state) {
             if (state.type == 'player') {
                 updateUser(state);
+            } else if (state.type == 'wave') {
+              if (state.delete) {
+                removeWave(state);
+              } else {
+                renderWave(state);
+              }
             } else if (state.type == 'coin') {
               if (state.delete) {
                 removeCoin(state);
@@ -243,7 +254,7 @@
         function updateUserGraphics(user) {
           var p1 = new Phaser.Point(user.sprite.x, user.sprite.y);
           var p2 = new Phaser.Point(user.x, user.y);
-          if (Phaser.Point.distance(p1, p2) > 20) {
+          if (Phaser.Point.distance(p1, p2) > 50) {
             user.sprite.x = user.x;
             user.sprite.y = user.y;
           } else {
@@ -447,6 +458,14 @@
           }
         }
 
+        function removeWave(waveData) {
+          var waveToRemove = waves[waveData.id];
+          if (waveToRemove) {
+            waveToRemove.sprite.destroy();
+            delete waves[waveToRemove.id];
+          }
+        }
+
         function renderCoin(coinData) {
           if (coins[coinData.id]) {
             coins[coinData.id].clientProcessed = Date.now();
@@ -460,6 +479,51 @@
             coin.sprite.x = coinData.x;
             coin.sprite.y = coinData.y;
             coin.clientProcessed = Date.now();
+          }
+        }
+
+        function renderWave(waveData) {
+          if (waves[waveData.id]) {
+            waves[waveData.id].clientProcessed = Date.now();
+            waves[waveData.id].x = waveData.x;
+            waves[waveData.id].y = waveData.y;
+            waves[waveData.id].sprite.x = waveData.x;
+            waves[waveData.id].sprite.y = waveData.y;
+            // waves[waveData.id].emitter.maxParticleAlpha *= waves[waveData.id].lifespan / waves[waveData.id].startLifespan;
+            // waves[waveData.id].emitter.minParticleAlpha *= waves[waveData.id].lifespan / waves[waveData.id].startLifespan;
+            waves[waveData.id].emitter.maxParticleScale = 2 * (waveData.lifespan / waveData.startLifespan);
+            // console.log(waveData.lifespan, waveData.startLifespan, waves[waveData.id].emitter.maxParticleScale);
+            waves[waveData.id].emitter.minParticleScale = 1 * (waveData.lifespan / waveData.startLifespan);
+          } else {
+            var wave = waveData;
+            waves[waveData.id] = wave;
+            wave.sprite = createTexturedSprite({
+              // texture: 'grass-' + (waveData.t || '1')
+              texture: 'grass-1'
+            });
+            wave.sprite.x = waveData.x;
+            wave.sprite.y = waveData.y;
+            wave.sprite.rotation = Math.atan2(waveData.velocity.y, waveData.velocity.x);// * 180 / Math.PI;
+            wave.emitter = game.add.emitter(0, 0, 50);
+            wave.sprite.addChild(wave.emitter);
+            wave.emitter.makeParticles(['wave-particle']);
+            wave.emitter.setSize(0, waveData.size);
+            // wave.emitter.lifespan = 1000;
+            // wave.emitter.maxRotation = 0;
+            // wave.emitter.minRotation = 0;
+            wave.emitter.maxParticleScale = 2;
+            wave.emitter.minParticleScale = 1;
+            wave.emitter.minParticleSpeed = new Phaser.Point(0, 0);
+            wave.emitter.maxParticleSpeed = new Phaser.Point(0, 0);
+
+            waves[waveData.id].emitter.lifespan = 250;
+            // waves[waveData.id].emitter.maxParticleAlpha = waves[waveData.id].lifespan / 5000 * 2;
+            // waves[waveData.id].emitter.minParticleAlpha = waves[waveData.id].lifespan / 5000 * 0.5;
+            // waves[waveData.id].emitter.maxParticleScale = waves[waveData.id].lifespan / 5000 * 2;
+            // waves[waveData.id].emitter.minParticleScale = waves[waveData.id].lifespan / 5000 * 0.5;
+
+            wave.emitter.start(false, 1000, 10);
+            wave.clientProcessed = Date.now();
           }
         }
 
@@ -545,6 +609,8 @@
           // For reconnect
           socket.on('connect', joinWorld);
           socket.on('disconnect', () => { console.log('died from disconnect'); die(); });
+
+          $('.intro-box').show();
         }
 
         var lastActionTime = 0;
@@ -552,9 +618,21 @@
         var tileAnimInterval = 100;
         var tileAnimTimer = 0;
 
+        function updateWaves() {
+          // for (var i in waves) {
+          //   var w = waves[i];
+          //   var sprite = game.add.sprite(0, 0, 'wave-particle');
+          //   sprite.anchor.setTo(0.5, 0.5);
+          //   w.sprite.addChild(sprite);
+          //   sprite.lifespan = 1000;
+          // }
+        }
+
         function update() {
           if (!isPlaying)
             return;
+
+          updateWaves();
 
           var didAction = false;
           var playerOp = {};
@@ -625,6 +703,15 @@
               var curCoin = coins[j];
               if (now - curCoin.clientProcessed > COIN_INACTIVITY_TIMEOUT) {
                 removeCoin(curCoin);
+              }
+            }
+          }
+
+          for (var j in waves) {
+            if (waves.hasOwnProperty(j)) {
+              var curWave = waves[j];
+              if (now - curWave.clientProcessed > WAVE_INACTIVITY_TIMEOUT) {
+                removeWave(curWave);
               }
             }
           }
