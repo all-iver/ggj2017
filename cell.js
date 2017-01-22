@@ -200,12 +200,30 @@ CellController.prototype.generateBotOps = function (playerIds, players, coins) {
       var isBotOnEdge = player.x <= radius || player.x >= config.WORLD_WIDTH - radius ||
         player.y <= radius || player.y >= config.WORLD_HEIGHT - radius;
 
-      if (Math.random() <= player.changeDirProb || isBotOnEdge) {
-        var randIndex = Math.floor(Math.random() * self.botMoves.length);
-        player.repeatOp = self.botMoves[randIndex];
+      var didIt = false;
+      if (player.targetId) {
+        var target = players[player.targetId];
+        if (target && !target.dead) {
+          player.op = {};
+          if (target.x > player.x)
+            player.op.r = 1;
+          if (target.x < player.x)
+            player.op.l = 1;
+          if (target.y > player.y)
+            player.op.d = 1;
+          if (target.y < player.y)
+            player.op.u = 1;
+          didIt = true;
+        }
       }
-      if (player.repeatOp) {
-        player.op = player.repeatOp;
+      if (!didIt) {
+        if (Math.random() <= player.changeDirProb || isBotOnEdge) {
+          var randIndex = Math.floor(Math.random() * self.botMoves.length);
+          player.repeatOp = self.botMoves[randIndex];
+        }
+        if (player.repeatOp) {
+          player.op = player.repeatOp;
+        }
       }
     }
   });
@@ -325,6 +343,28 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
 
   playerIds.forEach(function (playerId) {
     var player = players[playerId];
+    if (player.dead || player.subtype !== 'bot')
+      return;
+    var minDistance = 999999;
+    var minTarget = null;
+    playerIds.forEach(function (p2) {
+      if (p2 == playerId)
+        return;
+      var player2 = players[p2];
+      if (player2.dead || player2.subtype === 'bot')
+        return;
+      var dist = Math.pow(player2.x - player.x, 2) + Math.pow(player2.y - player.y, 2);
+      if (dist < 300 * 300 && (dist < minDistance || minTarget === null)) {
+        minDistance = dist;
+        minTarget = p2;
+      }
+    });
+    if (minTarget !== null)
+      player.targetId = minTarget;
+  });
+
+  playerIds.forEach(function (playerId) {
+    var player = players[playerId];
     if (player.dead)
       return;
     player.hitArea = self.generateHitArea(player);
@@ -376,6 +416,17 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
 
 CellController.prototype.generateHitArea = function (target) {
   var targetRadius = target.r || Math.round(target.diam / 2);
+  return {
+    target: target,
+    minX: target.x - targetRadius,
+    minY: target.y - targetRadius,
+    maxX: target.x + targetRadius,
+    maxY: target.y + targetRadius
+  };
+};
+
+CellController.prototype.generateSearchArea = function (target) {
+  var targetRadius = 500;
   return {
     target: target,
     minX: target.x - targetRadius,

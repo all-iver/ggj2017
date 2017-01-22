@@ -713,8 +713,10 @@ module.exports.run = function (worker) {
     });
 
     socket.on('join', function (playerOptions, respond) {
-      if (socket.player)
+      if (socket.player) {
+        socket.player.dead = true;
         stateManager.delete(socket.player);
+      }
 
       var startingPos = getRandomPosition(PLAYER_DIAMETER, PLAYER_DIAMETER);
       var player = {
@@ -742,6 +744,7 @@ module.exports.run = function (worker) {
 
     socket.on('disconnect', function () {
       if (socket.player) {
+        socket.player.dead = true;
         stateManager.delete(socket.player);
       }
     });

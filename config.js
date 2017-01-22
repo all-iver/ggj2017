@@ -48,14 +48,14 @@ module.exports = {
     1000: ['coin']
   },
 
-  PLAYER_DEFAULT_MOVE_SPEED: 10,
+  PLAYER_DEFAULT_MOVE_SPEED: 8,
   PLAYER_DIAMETER: 45,
   PLAYER_MASS: 20,
 
   // Note that the number of bots needs to be either 0 or a multiple of the number of
   // worker processes or else it will get rounded up/down.
   BOT_COUNT: 10,
-  BOT_MOVE_SPEED: 5,
+  BOT_MOVE_SPEED: 10,
   BOT_MASS: 10,
   BOT_DEFAULT_DIAMETER: 45,
   BOT_CHANGE_DIRECTION_PROBABILITY: 0.01,
