@@ -714,6 +714,19 @@ module.exports.run = function (worker) {
       });
     });
 
+    // socket.on('get-best', function(data, respond) {
+    //   var best = [];
+    //   if (!cellControllers[0].cellData || !cellControllers[0].cellData.player) {
+    //     respond(null, { best: [] });
+    //     return;
+    //   }
+    //   cellControllers[0].cellData.player.forEach((p) => {
+    //     best.push({ name: p.name, score: p.boostScore });
+    //   });
+    //   console.log(best);
+    //   respond(null, { best: best });
+    // });
+
     socket.on('join', function (playerOptions, respond) {
       if (socket.player) {
         socket.player.dead = true;

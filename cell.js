@@ -228,10 +228,9 @@ CellController.prototype.generateBotOps = function (playerIds, players, coins) {
       var radius = Math.round(player.diam / 2);
       var isBotOnEdge = player.x <= radius || player.x >= config.WORLD_WIDTH - radius ||
           player.y <= radius || player.y >= config.WORLD_HEIGHT - (config.BEACH_SIZE + 3) * 16 * 5 - radius;
-      var isBotPastLowerEdge = player.y >= config.WORLD_HEIGHT - (config.BEACH_SIZE + 3) * 16 * 5;
 
       var didIt = false;
-      if (player.targetId && !isBotPastLowerEdge) {
+      if (player.targetId) {
         var target = players[player.targetId];
         if (target && !target.dead) {
           player.op = {};
@@ -246,9 +245,21 @@ CellController.prototype.generateBotOps = function (playerIds, players, coins) {
           didIt = true;
         }
       }
+
+      var isBotPastLowerEdge = player.y >= config.WORLD_HEIGHT - (config.BEACH_SIZE + 1) * 16 * 5;
+      var isBotReallyPastLowerEdge = player.y >= config.WORLD_HEIGHT - (config.BEACH_SIZE - 1) * 16 * 5;
+      if (isBotReallyPastLowerEdge) {
+        player.repeatOp = self.botMoves[0];
+        player.op = self.botMoves[0];
+        player.y -= 1000; //oops
+        return;
+      }
+      if (isBotPastLowerEdge) {
+        player.repeatOp = self.botMoves[0];
+        player.op = self.botMoves[0];
+        return;
+      }
       if (!didIt) {
-        if (isBotPastLowerEdge)
-          player.repeatOp = self.botMoves[0];
         if (Math.random() <= player.changeDirProb || isBotOnEdge) {
           var randIndex = Math.floor(Math.random() * self.botMoves.length);
           player.repeatOp = self.botMoves[randIndex];

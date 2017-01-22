@@ -33,8 +33,14 @@
         <button type="submit">Play</button>
       </form>
     </div>
+
     <img class="audio-button mute" src="img/icons/icon_vol-mute_alt.png" />
     <img class="audio-button unmute" src="img/icons/icon_volume-high_alt.png" />
+
+    <div class="gnar-list">
+      <h3>Gnar Surfers:</h3>
+      <h2 class="players"></h2>
+    <div>
 
     <script type="text/javascript">
 
@@ -224,9 +230,14 @@
         }
 
         function handleCellData(stateList) {
+          var best = [];
           stateList.forEach(function (state) {
             if (state.type == 'player') {
                 updateUser(state);
+                if (state.subtype !== 'bot')
+                  best.push({ name: state.name, score: state.boostScore });
+                $('.gnar-list h2').html('')
+                $('.gnar-list h2').html(best.map((b) => { return '<li>' + b.name + ' - ' + (b.score ? b.score : '0') + '</li>' }).join(''));
             } else if (state.type == 'wave') {
               if (state.delete) {
                 removeWave(state);
@@ -640,9 +651,20 @@
           // For reconnect
           socket.on('connect', joinWorld);
           socket.on('disconnect', () => { console.log('died from disconnect'); die(); });
-
           $('.intro-box').show();
         }
+
+        // var waitingForThing = false;
+        // setInterval(() => {
+        //   if (!isPlaying || waitingForThing)
+        //     return;
+        //   waitingForThing = true;
+        //   console.log('getting');
+        //   socket.emit('get-best', (data) => {
+        //     waitingForThing = false;
+        //     console.log(data);
+        //   });
+        // }, 5000);
 
         var lastActionTime = 0;
         var tileCycle = 0;
