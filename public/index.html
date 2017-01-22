@@ -199,8 +199,6 @@
           game.load.image('surfboard', SURFBOARD_TEXTURE);
           game.load.image('tiles', 'img/ggj/wave2.png');
           game.load.image('wave-particle', 'img/ggj/waveparticle-2.png');
-
-          game.load.audio('soundtrack', 'Surf Waver GG2017.mp3');
         }
 
         function loadLevel() {
@@ -625,9 +623,13 @@
         function create() {
           loadLevel();
 
-          soundtrack = game.add.audio('soundtrack');
-          game.sound.setDecodedCallback('soundtrack', () => { soundtrack.loopFull(0.1); }, this);
-
+          game.load.audio('soundtrack', 'Surf Waver GG2017.mp3');
+          game.load.onLoadComplete.add(() => {
+            soundtrack = game.add.audio('soundtrack');
+            game.sound.setDecodedCallback('soundtrack', () => { soundtrack.loopFull(0.1); }, this);
+          });
+          game.load.start();
+          
           // background = game.add.tileSprite(0, 0, WORLD_WIDTH, WORLD_HEIGHT, 'background');
           game.time.advancedTiming = true;
           game.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
