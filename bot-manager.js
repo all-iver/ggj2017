@@ -31,7 +31,7 @@ BotManager.prototype.generateRandomPosition = function (botRadius) {
   var botDiameter = botRadius * 2;
   var position = {
     x: Math.round(Math.random() * (this.worldWidth - botDiameter) + botRadius),
-    y: Math.round(Math.random() * (this.worldHeight - this.beachSize * 16 * 5 - botDiameter) + botRadius)
+    y: Math.round(Math.random() * (this.worldHeight * 0.5 - botDiameter) + botRadius)
   };
   return position;
 };

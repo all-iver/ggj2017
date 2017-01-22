@@ -61,6 +61,7 @@ var velocity = new SAT.Vector(0, 1);
     lastCheck: Date.now(),
     startLifespan: Math.random() * 7000 * multiplier + 5000,
     size: size,
+    multiplier: multiplier,
     // angle: angle,
     // poly: poly,
     op: {}

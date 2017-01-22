@@ -374,7 +374,7 @@ CellController.prototype.applyPlayerOps = function (playerIds, players, coins) {
       player.y += player.boost.y;
       if (!player.boostScore)
         player.boostScore = 0;
-      player.boostScore += Math.round((((Date.now() - player.startBoost) / 5000) * player.boost.len()));
+      player.boostScore += Math.round((((Date.now() - player.startBoost) / 5000) * player.boost.len()) * player.boostMultiplier);
     }
 
     if (player.playerOverlaps) {
@@ -474,9 +474,9 @@ CellController.prototype.findPlayerOverlaps = function (playerIds, players, coin
         // console.log(p1.x, p1.y, p2.x, p2.y, wave.x, wave.y, wave.size, dist);
         if (!player.startBoost) {
           player.startBoost = Date.now();
-          console.log('set it to ' + player.startBoost);
         }
         player.boost = new SAT.Vector(wave.velocity.x, wave.velocity.y);
+        player.boostMultiplier = wave.multiplier;
         player.boosting = true;
       }
     });

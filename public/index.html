@@ -658,6 +658,8 @@
           //   sprite.lifespan = 1000;
           // }
         }
+        var waveAnimTimer = 0;
+        var waveIndex = 7;
 
         function update() {
           if (!isPlaying)
@@ -700,6 +702,20 @@
             map.replace(3, 4);
             map.replace(2, 3);
             map.replace(1, 2);
+          }
+          waveAnimTimer += game.time.elapsed;
+          if (waveAnimTimer > 1000) {
+            waveAnimTimer = 0;
+            var newTile = waveIndex + 1;
+            if (newTile === 12)
+              newTile = 7;
+            if (newTile === 10) {
+              map.replace(9, 8);
+            } else if (newTile === 11) {
+              map.replace(8, 7);
+            } else
+              map.replace(waveIndex, newTile);
+            waveIndex = newTile;
           }
 
           var tile = map.getTile(Math.round(Math.random() * (LEVEL_SIZE.width - 1)),
