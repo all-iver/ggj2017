@@ -28,6 +28,7 @@
     <div class="intro-box popup">
       <h4 class="title">SURFWAVER</h4>
       <h2>Surf with friends!</h2>
+      <h2>Ride the waves!</h2>
       <form class="play-game-form">
         <input class="nickname" type="text" name="name" placeholder="Nickname" />
         <button type="submit">Play</button>
@@ -199,7 +200,7 @@
           game.load.image('tiles', 'img/ggj/wave2.png');
           game.load.image('wave-particle', 'img/ggj/waveparticle-2.png');
 
-          game.load.audio('soundtrack', 'GGJ2017 sketch1.mp3');
+          game.load.audio('soundtrack', 'Surf Waver GG2017.mp3');
         }
 
         function loadLevel() {
@@ -237,6 +238,13 @@
                 if (state.subtype !== 'bot')
                   best.push({ name: state.name, score: state.boostScore });
                 $('.gnar-list h2').html('')
+                best.sort((b1, b2) => { 
+                  if (b1.score < b2.score)
+                    return -1;
+                  if (b1.score > b2.score)
+                    return -1;
+                  return 0;
+                });
                 $('.gnar-list h2').html(best.map((b) => { return '<li>' + b.name + ' - ' + (b.score ? b.score : '0') + '</li>' }).join(''));
             } else if (state.type == 'wave') {
               if (state.delete) {

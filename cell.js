@@ -249,13 +249,17 @@ CellController.prototype.generateBotOps = function (playerIds, players, coins) {
       var isBotPastLowerEdge = player.y >= config.WORLD_HEIGHT - (config.BEACH_SIZE + 1) * 16 * 5;
       var isBotReallyPastLowerEdge = player.y >= config.WORLD_HEIGHT - (config.BEACH_SIZE - 1) * 16 * 5;
       if (isBotReallyPastLowerEdge) {
-        player.repeatOp = self.botMoves[0];
         player.op = self.botMoves[0];
         player.y -= 1000; //oops
         return;
       }
+      if (player.goUp > 0) {
+        player.goUp --;
+        player.op = self.botMoves[0];
+        return;
+      }
       if (isBotPastLowerEdge) {
-        player.repeatOp = self.botMoves[0];
+        player.goUp = 10;
         player.op = self.botMoves[0];
         return;
       }
