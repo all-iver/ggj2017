@@ -743,7 +743,9 @@ module.exports.run = function (worker) {
         y: startingPos.y,
         diam: PLAYER_DIAMETER,
         mass: PLAYER_MASS,
-        score: 0
+        score: 0,
+        bodyType: Math.floor(Math.random() * 3),
+        surfboardType: Math.floor(Math.random() * 5),
       };
 
       socket.player = stateManager.create(player);

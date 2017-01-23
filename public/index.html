@@ -95,17 +95,10 @@
         var ATTACK_ANIM_TIME = 250;
 
         var youTextures = {
-          up: 'img/ggj/guy-up.png',
-          left: 'img/ggj/guy-left.png',
-          right: 'img/ggj/guy-right.png',
-          down: 'img/ggj/guy-down.png'
-        };
-
-        var othersTextures = {
-          up: 'img/ggj/guy-up.png',
-          left: 'img/ggj/guy-left.png',
-          right: 'img/ggj/guy-right.png',
-          down: 'img/ggj/guy-down.png'
+          up: ['img/ggj/guy-up.png', 'img/ggj/guy-up-2.png', 'img/ggj/guy-up-3.png'],
+          left: ['img/ggj/guy-left.png', 'img/ggj/guy-left-2.png', 'img/ggj/guy-left-3.png'],
+          right: ['img/ggj/guy-right.png', 'img/ggj/guy-right-2.png', 'img/ggj/guy-right-3.png'],
+          down: ['img/ggj/guy-down.png', 'img/ggj/guy-down-2.png', 'img/ggj/guy-down-3.png']
         };
 
         var botTextures = {
@@ -175,15 +168,23 @@
 
           game.load.image('background', BACKGROUND_TEXTURE);
 
-          game.load.image('you-up', youTextures.up);
-          game.load.image('you-down', youTextures.down);
-          game.load.image('you-right', youTextures.right);
-          game.load.image('you-left', youTextures.left);
+          game.load.image('you-up0', youTextures.up[0]);
+          game.load.image('you-down0', youTextures.down[0]);
+          game.load.image('you-right0', youTextures.right[0]);
+          game.load.image('you-left0', youTextures.left[0]);
+          game.load.image('you-up1', youTextures.up[1]);
+          game.load.image('you-down1', youTextures.down[1]);
+          game.load.image('you-right1', youTextures.right[1]);
+          game.load.image('you-left1', youTextures.left[1]);
+          game.load.image('you-up2', youTextures.up[2]);
+          game.load.image('you-down2', youTextures.down[2]);
+          game.load.image('you-right2', youTextures.right[2]);
+          game.load.image('you-left2', youTextures.left[2]);
 
-          game.load.image('others-up', othersTextures.up);
-          game.load.image('others-down', othersTextures.down);
-          game.load.image('others-right', othersTextures.right);
-          game.load.image('others-left', othersTextures.left);
+          // game.load.image('others-up', othersTextures.up);
+          // game.load.image('others-down', othersTextures.down);
+          // game.load.image('others-right', othersTextures.right);
+          // game.load.image('others-left', othersTextures.left);
 
           game.load.image('bot-up', botTextures.up);
           game.load.image('bot-down', botTextures.down);
@@ -196,7 +197,11 @@
           // game.load.image('grass-4', grassTextures[4]);
 
           game.load.image('spear', SPEAR_TEXTURE);
-          game.load.image('surfboard', SURFBOARD_TEXTURE);
+          game.load.image('surfboard0', 'img/ggj/surfboard0.png');
+          game.load.image('surfboard1', 'img/ggj/surfboard1.png');
+          game.load.image('surfboard2', 'img/ggj/surfboard2.png');
+          game.load.image('surfboard3', 'img/ggj/surfboard3.png');
+          game.load.image('surfboard4', 'img/ggj/surfboard4.png');
           game.load.image('tiles', 'img/ggj/wave2.png');
           game.load.image('wave-particle', 'img/ggj/waveparticle-2.png');
         }
@@ -289,7 +294,10 @@
           if (!user.direction) {
             user.direction = 'down';
           }
-          user.sprite.loadTexture(user.texturePrefix + '-' + user.direction);
+          if (user.texturePrefix === 'bot')
+            user.sprite.loadTexture(user.texturePrefix + '-' + user.direction);
+          else
+            user.sprite.loadTexture(user.texturePrefix + '-' + user.direction + (user.bodyType ? user.bodyType : 0));
 
           user.surfboardSprite.x = user.sprite.x;
           user.surfboardSprite.y = user.sprite.y + 20;
@@ -406,7 +414,7 @@
 
           if (userData.id == playerId) {
             sprite = createTexturedSprite({
-              texture: 'you-down'
+              texture: 'you-down' + userData.bodyType
             });
             user.texturePrefix = 'you';
           } else if (userData.subtype == 'bot') {
@@ -416,17 +424,17 @@
             user.texturePrefix = 'bot';
           } else {
             sprite = createTexturedSprite({
-              texture: 'others-down'
+              texture: 'you-down' + userData.bodyType
             });
-            user.texturePrefix = 'others';
+            user.texturePrefix = 'you';
           }
 
           var weaponSprite = createTexturedSprite({ texture: 'spear' });
           var weaponSprite = game.add.sprite(0, 0, 'spear');
           weaponSprite.anchor.setTo(0.5, 1);
 
-          var surfboardSprite = createTexturedSprite({ texture: 'surfboard' });
-          var surfboardSprite = game.add.sprite(0, 0, 'surfboard');
+          // var surfboardSprite = createTexturedSprite({ texture: 'surfboard' + user.surfboardType });
+          var surfboardSprite = game.add.sprite(0, 0, 'surfboard' + userData.surfboardType);
           surfboardSprite.anchor.setTo(0.5, 0.5);
 
           var soundtrack;
@@ -485,6 +493,8 @@
             user.direction = userData.direction;
             user.attacking = userData.attacking;
             user.boostScore = userData.boostScore;
+            user.bodyType = userData.bodyType;
+            user.surfboardType = userData.surfboardType;
             user.onBeach = userData.onBeach;
             user.attackCount = userData.attackCount;
             user.dead = userData.dead;
@@ -626,7 +636,7 @@
           game.load.audio('soundtrack', 'Surf Waver GG2017.mp3');
           game.load.onLoadComplete.add(() => {
             soundtrack = game.add.audio('soundtrack');
-            game.sound.setDecodedCallback('soundtrack', () => { soundtrack.loopFull(0.1); }, this);
+            game.sound.setDecodedCallback('soundtrack', () => { soundtrack.loopFull(0.6); }, this);
           });
           game.load.start();
           

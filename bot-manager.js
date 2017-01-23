@@ -54,7 +54,8 @@ BotManager.prototype.addBot = function (options) {
     mass: options.mass || this.botMass,
     diam: diameter,
     changeDirProb: this.botChangeDirectionProbability,
-    op: {}
+    op: {},
+    surfboardType: Math.floor(Math.random() * 5)
   };
   if (options.x && options.y) {
     bot.x = options.x;
