@@ -24,7 +24,7 @@
       }
     </style>
   </head>
-  <body>
+  <body onmouseup="godown=goup=goleft=goright=false">
     <div class="intro-box popup">
       <h4 class="title">SURFWAVER</h4>
       <h2>Surf with friends!</h2>
@@ -41,7 +41,21 @@
     <div class="gnar-list">
       <h3>Gnar Surfers:</h3>
       <h2 class="players"></h2>
-    <div>
+    </div>
+    <div class="phonebtns">
+      <div class="column" style="float: left">
+        <div class="dirbtn invis"></div>
+        <div class="dirbtn btnleft" onmousedown="goleft=true">left</div>
+      </div>
+      <div class="column" style="float: left">
+        <div class="dirbtn btnup" onmousedown="goup=true">up</div>
+        <div class="dirbtn btndown" onmousedown="godown=true">down</div>
+      </div>
+      <div class="column" style="float: left">
+        <div class="dirbtn invis"></div>
+        <div class="dirbtn btnright" style="float: left" onmousedown="goright=true">right</div>
+      </div>
+    </div>
 
     <script type="text/javascript">
 
@@ -50,6 +64,10 @@
       });
 
       window.onload = function () {
+        godown = false;
+        goup = false;
+        goleft = false;
+        goright = false;
         $('.intro-box').hide();
         $('.play-game-form').on('submit', playGame);
         $('.mute').on('click', () => { 
@@ -711,19 +729,19 @@
 
           var didAction = false;
           var playerOp = {};
-          if (keys.up.isDown) {
+          if (keys.up.isDown || goup) {
             playerOp.u = 1;
             didAction = true;
           }
-          if (keys.down.isDown) {
+          if (keys.down.isDown || godown) {
             playerOp.d = 1;
             didAction = true;
           }
-          if (keys.right.isDown) {
+          if (keys.right.isDown || goright) {
             playerOp.r = 1;
             didAction = true;
           }
-          if (keys.left.isDown) {
+          if (keys.left.isDown || goleft) {
             playerOp.l = 1;
             didAction = true;
           }
